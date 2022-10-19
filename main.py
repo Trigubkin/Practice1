@@ -1,64 +1,78 @@
-import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
-from warnings import filterwarnings
-import openpyxl
-filterwarnings("ignore")
+import pandas as pd
+from pandas_profiling import ProfileReport
+import math
 
-#import sns as sns
+data = {'sHours':['5','5','7','10','5','8','6','8','6','8','7','7','7','7','8','6','3','5','9'],
+        'Work':['0','1','1','0','1','0','1','0','0','1','0','0','0','1','0','1','1','0','0'],
+        'Weight':['90','82','75','69','100','67','65','88','103','85','62','70','55','65','82','51','82','70','67'],
+        'Height':['175','172','177','179','180','170','179','187','184','195','170','175','168','178','190','150','176','177','172'],
+        'Way':['2','0.8','1','0.25','2','2','1.5','0.17','1','0.6667','1','1','1','1','1.5','1.5','1.5','1','1.5'],
+        'Total':['t','t','c','t','t','t','c','t','t','c','t','c','c','t','c','c','t','c','c']}
 
-filterwarnings("ignore")
+frame = pd.DataFrame(data)
+frame
 
-df = pd.read_excel('Gruppy_22__1.xlsx')
-df.head()
-
-df.info()
-
-# посмотрим на визуализацию
-sns.pairplot(data = df,hue = 'К/Ч')
-
-# преобразуем бинарные значения
-dict_decode = {0:'чай',1:'кофе'}
-df['К/Ч'] = df['К/Ч'].replace({'ч':0,'к':1})
-df['мама'] = df.iloc[:,5].map(lambda x:x[0]).replace({'ч':0,'к':1})
-df['папа'] = df.iloc[:,5].map(lambda x:x[1]).replace({'ч':0,'к':1})
-df = df.drop(columns=['Родители (мама, папа) что пьют'])
-df.head()
+sHoursCur = int(input("Сколько часов сна? "))
+WorkCur = int(input("Трудоустроен? "))
+WeightCur = int(input("Какой вес? "))
+HeightCur = int(input("Какой рост? "))
+WayCur = float(input("Сколько времени тратите на поездку? "))
 
 
-# оставим пару примеров для теста
-train_idx = np.random.choice(np.arange(19),size = 17,replace=False)
-test_idx = list(set(np.arange(19))  - set(train_idx))
-train = df.iloc[train_idx]
-test = df.iloc[test_idx]
+for x in data:
+  sHours = data['sHours']
+  Work = data['Work']
+  Weight = data['Weight']
+  Height = data['Height']
+  Way = data['Way']
+  Total = data['Total']
+
+i = 0
+dist = []
+for x in data['sHours']:
+  dist.insert(i, math.sqrt((sHoursCur - int(sHours[i])) ** 2 + (WorkCur - int(Work[i])) ** 2 + (WeightCur - int(Weight[i])) ** 2) + (HeightCur - int(Height[i])) ** 2 + (WayCur - float(Way[i])) ** 2)
+  i += 1
+  print(dist)
+
+data1 = data
+data1['Dist'] =  dist
+frame1 = pd.DataFrame(data1)
+
+data2 = data1
+frame2 = pd.DataFrame(data2)
+frame2 = frame2.sort_values('Dist')
+data2 = frame2
+
+i = 0 
+numberOfRank = 1
+rank = []
+for x in data2['sHours']:
+  rank.insert(i, numberOfRank)
+  i += 1
+  numberOfRank += 1
+data2["Rank"] = rank
+
+frame3 = pd.DataFrame(data2)
 
 
-def determine_preference_of_drink_by_knn(train_df, new_object, k=5, type_norm=2):
-    help_dict = {0: 'Чай', 1: 'Кофе'}
+i = 0
+TotalTea = 0
+TotalCoffee = 0
+for x in data2['Rank']:
+  TotalEnd = data2['Total']
 
-    train_df['distance_to_new_object'] = (np.linalg.
-                                          norm(train_df.drop(columns=['К/Ч']) - new_object,
-                                               ord=type_norm, axis=1))
 
-    answer = train_df.sort_values('distance_to_new_object').iloc[:k]['К/Ч'].value_counts().index.tolist()[0]
-    #     .mode().values[0]  можно и так
-    return f'Человек с таким набором характеристик предпочитает пить {help_dict[answer]}'
+for x in data2['Rank']:
+  if TotalEnd[i] == 't':
+    TotalTea += 1
+  else:
+    TotalCoffee += 1
+  i += 1
 
-print(determine_preference_of_drink_by_knn(train,test.iloc[0,[0,1,2,3,4,6,7]]))
-print('Указанное предпочтение',dict_decode[test.iloc[0,5]])
-
-time_sleep = int(input('Часы сна:'))
-work = int(input('Трудоустройство:'))
-weight = int(input('Вес:'))
-height = int(input('Рост:'))
-
-distance = float(input('Расстояние до МИРЭА в часах:'))
-mama = input('Что пьет мама:')
-papa = input('Что пьет папа:')
-dict_encode = {'чай':0,'кофе':1}
-test_data = np.array([time_sleep,work,weight,height,distance,
-                      dict_encode[mama.lower()],dict_encode[papa.lower()]])
-print(determine_preference_of_drink_by_knn(df,test_data))
-print('Самое близкое расстояние',sorted(df.distance_to_new_object)[0])
-print(df.sort_values(by='distance_to_new_object'))
+print(TotalCoffee)
+print(TotalTea)
+if TotalCoffee > TotalTea:
+  print('Пользователь будет предпочитать Кофе')
+else:
+  print('Пользователь будет предпочитать Чай')
