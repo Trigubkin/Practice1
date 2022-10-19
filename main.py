@@ -10,7 +10,7 @@ filterwarnings("ignore")
 
 filterwarnings("ignore")
 
-df = pd.read_excel('Gruppy_22__1,xlsx/Gruppy_22__1.xlsx')
+df = pd.read_excel('Gruppy_22__1.xlsx')
 df.head()
 
 df.info()
